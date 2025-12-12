@@ -68,9 +68,14 @@ module ActiveRecord
         connection = model.connection
         adapter = adapter_for(connection)
         config = config_for(model)
+        db_config_name = model.connection_db_config.name
 
         active_sessions = execute_with_timeout(connection, adapter.active_session_count_query)
-        active_sessions.to_f / config.vcpu_count
+        load_pct = active_sessions.to_f / config.vcpu_count
+
+        instrument(db_config_name, load_pct, active_sessions)
+
+        load_pct
       rescue
         1.0
       end
@@ -112,6 +117,17 @@ module ActiveRecord
         else
           raise "Unsupported database adapter: #{connection.adapter_name}"
         end
+      end
+
+      def instrument(db_config_name, load_pct, active_sessions)
+        return unless defined?(ActiveSupport::Notifications)
+
+        ActiveSupport::Notifications.instrument(
+          "health_check.activerecord_health",
+          database: db_config_name,
+          load_pct: load_pct,
+          active_sessions: active_sessions
+        )
       end
     end
   end

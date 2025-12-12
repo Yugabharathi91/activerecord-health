@@ -186,6 +186,30 @@ end
 | MariaDB | Yes |
 | SQLite | No |
 
+## Observability
+
+Send load data to Datadog, StatsD, or other tools. The gem fires an event each time it checks the database:
+
+```ruby
+ActiveSupport::Notifications.subscribe("health_check.activerecord_health") do |*, payload|
+  StatsD.gauge("db.load_pct", payload[:load_pct], tags: ["db:#{payload[:database]}"])
+  StatsD.gauge("db.active_sessions", payload[:active_sessions], tags: ["db:#{payload[:database]}"])
+end
+```
+
+> [!TIP]
+> Start by tracking `load_pct` for a few days. This helps you learn what "normal" looks like before you set thresholds.
+
+The event fires only when the gem runs a query. It does not fire when reading from cache.
+
+**Event payload:**
+
+| Key | Description |
+|-----|-------------|
+| `database` | Connection name |
+| `load_pct` | Load as a ratio (0.0 to 1.0+) |
+| `active_sessions` | Number of active sessions |
+
 ## Optional Extensions
 
 Add convenience methods to connections and models:
