@@ -99,6 +99,6 @@ class MySQLIntegrationTest < ActiveRecord::Health::TestCase
 
   def mysql_host
     host = ENV.fetch("MYSQL_HOST", "127.0.0.1")
-    host == "localhost" ? "127.0.0.1" : host
+    (host == "localhost") ? "127.0.0.1" : host
   end
 end
