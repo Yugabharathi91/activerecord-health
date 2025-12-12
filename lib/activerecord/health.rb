@@ -54,68 +54,47 @@ module ActiveRecord
       end
 
       def read_from_cache(cache_key)
-        cached_value = configuration.cache.read(cache_key)
-        return cached_value unless cached_value.nil?
-
-        value = yield
-        configuration.cache.write(cache_key, value, expires_in: configuration.cache_ttl)
-        value
+        configuration.cache.read(cache_key) || write_to_cache(cache_key, yield)
       rescue
         0.0
       end
 
+      def write_to_cache(cache_key, value)
+        configuration.cache.write(cache_key, value, expires_in: configuration.cache_ttl)
+        value
+      end
+
       def query_load_pct(model)
-        connection = model.connection
-        adapter = adapter_for(connection)
-        config = config_for(model)
-        db_config_name = model.connection_db_config.name
-
-        active_sessions = execute_with_timeout(connection, adapter.active_session_count_query)
-        load_pct = active_sessions.to_f / config.vcpu_count
-
-        instrument(db_config_name, load_pct, active_sessions)
-
-        load_pct
+        active_sessions = fetch_active_sessions(model)
+        calculate_and_instrument_load(model, active_sessions)
       rescue
         1.0
       end
 
-      def execute_with_timeout(connection, query)
-        adapter_name = connection.adapter_name.downcase
-
-        case adapter_name
-        when /postgresql/
-          execute_with_postgresql_timeout(connection, query)
-        when /mysql/
-          execute_with_mysql_timeout(connection, query)
-        else
-          connection.select_value(query)
-        end
+      def fetch_active_sessions(model)
+        adapter = adapter_for(model.connection)
+        execute_with_timeout(model.connection, adapter, adapter.active_session_count_query)
       end
 
-      def execute_with_postgresql_timeout(connection, query)
-        connection.transaction do
-          connection.execute("SET LOCAL statement_timeout = '#{QUERY_TIMEOUT}s'")
-          connection.select_value(query)
-        end
+      def calculate_and_instrument_load(model, active_sessions)
+        load_pct = active_sessions.to_f / config_for(model).vcpu_count
+        instrument(model.connection_db_config.name, load_pct, active_sessions)
+        load_pct
       end
 
-      def execute_with_mysql_timeout(connection, query)
-        connection.transaction do
-          connection.execute("SET max_execution_time = #{QUERY_TIMEOUT * 1000}")
-          connection.select_value(query)
-        end
+      def execute_with_timeout(connection, adapter, query)
+        adapter.execute_with_timeout(connection, query, QUERY_TIMEOUT)
       end
 
       def adapter_for(connection)
+        adapter_class_for(connection).build(connection)
+      end
+
+      def adapter_class_for(connection)
         case connection.adapter_name.downcase
-        when /postgresql/
-          Adapters::PostgreSQLAdapter.new
-        when /mysql/
-          version = connection.select_value("SELECT VERSION()")
-          Adapters::MySQLAdapter.new(version)
-        else
-          raise "Unsupported database adapter: #{connection.adapter_name}"
+        when /postgresql/ then Adapters::PostgreSQLAdapter
+        when /mysql/ then Adapters::MySQLAdapter
+        else raise "Unsupported database adapter: #{connection.adapter_name}"
         end
       end
 

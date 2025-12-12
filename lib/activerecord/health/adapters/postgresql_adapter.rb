@@ -4,6 +4,10 @@ module ActiveRecord
   module Health
     module Adapters
       class PostgreSQLAdapter
+        def self.build(_connection)
+          new
+        end
+
         def name
           :postgresql
         end
@@ -16,6 +20,13 @@ module ActiveRecord
               AND backend_type = 'client backend'
               AND pid != pg_backend_pid()
           SQL
+        end
+
+        def execute_with_timeout(connection, query, timeout)
+          connection.transaction do
+            connection.execute("SET LOCAL statement_timeout = '#{timeout}s'")
+            connection.select_value(query)
+          end
         end
       end
     end

@@ -8,6 +8,11 @@ module ActiveRecord
 
         attr_reader :version_string
 
+        def self.build(connection)
+          version = connection.select_value("SELECT VERSION()")
+          new(version)
+        end
+
         def initialize(version_string)
           @version_string = version_string
         end
@@ -22,6 +27,13 @@ module ActiveRecord
 
         def uses_performance_schema?
           !mariadb? && mysql_version >= PERFORMANCE_SCHEMA_MIN_VERSION
+        end
+
+        def execute_with_timeout(connection, query, timeout)
+          connection.transaction do
+            connection.execute("SET max_execution_time = #{timeout * 1000}")
+            connection.select_value(query)
+          end
         end
 
         private
