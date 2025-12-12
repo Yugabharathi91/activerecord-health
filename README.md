@@ -191,7 +191,7 @@ end
 Add convenience methods to connections and models:
 
 ```ruby
-require "activerecord-health/extensions"
+require "activerecord/health/extensions"
 
 ActiveRecord::Base.connection.healthy?
 # => true
