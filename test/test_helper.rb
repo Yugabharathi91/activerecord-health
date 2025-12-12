@@ -1,0 +1,56 @@
+# frozen_string_literal: true
+
+$LOAD_PATH.unshift File.expand_path("../lib", __dir__)
+
+require "active_record"
+require "active_support"
+require "active_support/core_ext/string"
+require "active_support/cache"
+require "activerecord/health"
+
+require "minitest/autorun"
+require "minitest/reporters"
+
+Minitest::Reporters.use! Minitest::Reporters::DefaultReporter.new
+
+class ActiveRecord::Health::TestCase < Minitest::Test
+  def setup
+    ActiveRecord::Health.reset_configuration!
+  end
+
+  def teardown
+    ActiveRecord::Health.reset_configuration!
+  end
+end
+
+class MockCache
+  def initialize
+    @store = {}
+  end
+
+  def read(key)
+    @store[key]
+  end
+
+  def write(key, value, options = {})
+    @store[key] = value
+  end
+
+  def delete(key)
+    @store.delete(key)
+  end
+
+  def clear
+    @store.clear
+  end
+end
+
+class FailingCache
+  def read(key)
+    raise "Cache connection failed"
+  end
+
+  def write(key, value, options = {})
+    raise "Cache connection failed"
+  end
+end
