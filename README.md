@@ -1,39 +1,208 @@
 # ActiveRecord::Health
 
-TODO: Delete this and the text below, and describe your gem
+Monitor your database's health by tracking active sessions. When load gets too high, shed work to keep your app running.
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/activerecord/health`. To experiment with that code, run `bin/console` for an interactive prompt.
+## Why Use This?
+
+This gem was inspired by [Simon Eskildsen](https://www.youtube.com/watch?v=N8NWDHgWA28), who described a similar system in place at Shopify.
+
+Databases slow down when they have too many active queries. This gem helps you:
+
+- **Shed load safely.** Skip low-priority work when the database is busy.
+- **Protect your app.** Return 503 errors instead of timing out, which allows higher-priority work to get through.
+
+The gem counts active database sessions. It compares this count to your database's vCPU count. When active sessions exceed a threshold, the database is "unhealthy."
 
 ## Installation
 
-TODO: Replace `UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG` with your gem name right after releasing it to RubyGems.org. Please do not do it earlier due to security reasons. Alternatively, replace this section with instructions to install your gem from git if you don't plan to release to RubyGems.org.
+Add to your Gemfile:
 
-Install the gem and add to the application's Gemfile by executing:
-
-```bash
-bundle add UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
+```ruby
+gem "activerecord-health"
 ```
 
-If bundler is not being used to manage dependencies, install the gem by executing:
+Then run:
 
 ```bash
-gem install UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
+bundle install
 ```
 
-## Usage
+## Quick Start
 
-TODO: Write usage instructions here
+```ruby
+# config/initializers/activerecord_health.rb
+ActiveRecord::Health.configure do |config|
+  config.vcpu_count = 16        # Required: your database server's vCPU count
+  config.cache = Rails.cache    # Required: any ActiveSupport::Cache store
+end
+```
 
-## Development
+Now check if your database is healthy:
 
-After checking out the repo, run `bin/setup` to install dependencies. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+```ruby
+ActiveRecord::Health.ok?
+# => true
+```
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+## Configuration
 
-## Contributing
+```ruby
+ActiveRecord::Health.configure do |config|
+  # Required settings
+  config.vcpu_count = 16          # Number of vCPUs on your database server
+  config.cache = Rails.cache      # Cache store for health check results
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/nateberkopec/activerecord-health.
+  # Optional settings
+  config.threshold = 0.75         # Max healthy load (default: 0.75)
+  config.cache_ttl = 60           # Cache duration in seconds (default: 60)
+end
+```
+
+> [!IMPORTANT]
+> You must set `vcpu_count` and `cache`. The gem raises an error without them.
+
+### What Does Threshold Mean?
+
+The threshold is the maximum healthy load as a ratio of vCPUs.
+
+With `vcpu_count = 16` and `threshold = 0.75`:
+- Up to 12 active sessions = healthy (12/16 = 0.75)
+- More than 12 active sessions = unhealthy
+
+## API
+
+### Check Health
+
+```ruby
+# Returns true if database is healthy
+ActiveRecord::Health.ok?
+
+# Get current load as a percentage
+ActiveRecord::Health.load_pct
+# => 0.5 (50% of vCPUs in use)
+```
+
+### Shed Work
+
+Use `sheddable` to skip work when the database is overloaded:
+
+```ruby
+ActiveRecord::Health.sheddable do
+  GenerateReport.perform(user_id: current_user.id)
+end
+```
+
+Use `sheddable_pct` for different priority levels:
+
+```ruby
+# High priority: only run below 50% load
+ActiveRecord::Health.sheddable_pct(pct: 0.5) do
+  BulkImport.perform(data)
+end
+
+# Low priority: only run below 90% load
+ActiveRecord::Health.sheddable_pct(pct: 0.9) do
+  SendAnalyticsEmail.perform(user_id: current_user.id)
+end
+```
+
+## Usage Examples
+
+### Controller Filter
+
+Return 503 when the database is overloaded:
+
+```ruby
+class ReportsController < ApplicationController
+  before_action :check_database_health
+
+  private
+
+  def check_database_health
+    return if ActiveRecord::Health.ok?
+    render json: { error: "Service temporarily unavailable" },
+           status: :service_unavailable
+  end
+end
+```
+
+### Sidekiq Middleware
+
+Retry jobs when the database is unhealthy:
+
+```ruby
+# config/initializers/sidekiq.rb
+class DatabaseHealthMiddleware
+  THROTTLED_QUEUES = %w[reports analytics bulk_import].freeze
+
+  def call(_worker, job, _queue)
+    if THROTTLED_QUEUES.include?(job["queue"]) && !ActiveRecord::Health.ok?
+      raise ActiveRecord::Health::Unhealthy
+    end
+    yield
+  end
+end
+
+Sidekiq.configure_server do |config|
+  config.server_middleware do |chain|
+    chain.add DatabaseHealthMiddleware
+  end
+end
+```
+
+## Multi-Database Support
+
+Pass the model class that connects to your database:
+
+```ruby
+# Check the primary database (default)
+ActiveRecord::Health.ok?
+
+# Check a specific database
+ActiveRecord::Health.ok?(model: AnimalsRecord)
+```
+
+Configure each database separately:
+
+```ruby
+ActiveRecord::Health.configure do |config|
+  config.vcpu_count = 16  # Default for primary database
+  config.cache = Rails.cache
+
+  config.for_model(AnimalsRecord) do |db|
+    db.vcpu_count = 8
+    db.threshold = 0.5
+  end
+end
+```
+
+## Database Support
+
+| Database | Supported |
+|----------|-----------|
+| PostgreSQL 10+ | Yes |
+| MySQL 5.1+ | Yes |
+| MySQL 8.0.22+ | Yes (uses performance_schema) |
+| MariaDB | Yes |
+| SQLite | No |
+
+## Optional Extensions
+
+Add convenience methods to connections and models:
+
+```ruby
+require "activerecord-health/extensions"
+
+ActiveRecord::Base.connection.healthy?
+# => true
+
+ActiveRecord::Base.connection.load_pct
+# => 0.75
+
+ActiveRecord::Base.database_healthy?
+# => true
+```
 
 ## License
 
-The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
+MIT License. See [LICENSE](LICENSE) for details.

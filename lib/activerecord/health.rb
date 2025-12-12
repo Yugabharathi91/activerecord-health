@@ -9,8 +9,6 @@ module ActiveRecord
   module Health
     QUERY_TIMEOUT = 1
 
-    class Unhealthy < StandardError; end
-
     class << self
       def configure
         yield(configuration)
@@ -36,23 +34,18 @@ module ActiveRecord
       end
 
       def sheddable(model: ActiveRecord::Base)
-        raise_if_unhealthy(model)
+        return false unless ok?(model: model)
         yield
+        true
       end
 
       def sheddable_pct(pct:, model: ActiveRecord::Base)
-        current_load = load_pct(model: model)
-        raise Unhealthy, "Database is overloaded (#{(current_load * 100).round}%)" if current_load > pct
+        return false if load_pct(model: model) > pct
         yield
+        true
       end
 
       private
-
-      def raise_if_unhealthy(model)
-        return if ok?(model: model)
-        current_load = load_pct(model: model)
-        raise Unhealthy, "Database is overloaded (#{(current_load * 100).round}%)"
-      end
 
       def config_for(model)
         model_class = model.is_a?(Class) ? model : model.class

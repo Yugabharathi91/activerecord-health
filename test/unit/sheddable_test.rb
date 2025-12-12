@@ -3,7 +3,7 @@
 require "test_helper"
 
 class SheddableTest < ActiveRecord::Health::TestCase
-  def test_sheddable_executes_block_when_healthy
+  def test_sheddable_executes_block_and_returns_true_when_healthy
     cache = MockCache.new
     cache.write("activerecord_health:load_pct:primary", 0.5)
 
@@ -14,12 +14,14 @@ class SheddableTest < ActiveRecord::Health::TestCase
     end
 
     mock_model = MockModel.new("primary")
-    result = ActiveRecord::Health.sheddable(model: mock_model) { "executed" }
+    executed = false
+    result = ActiveRecord::Health.sheddable(model: mock_model) { executed = true }
 
-    assert_equal "executed", result
+    assert executed
+    assert result
   end
 
-  def test_sheddable_raises_unhealthy_when_overloaded
+  def test_sheddable_returns_false_and_skips_block_when_overloaded
     cache = MockCache.new
     cache.write("activerecord_health:load_pct:primary", 0.9)
 
@@ -30,13 +32,14 @@ class SheddableTest < ActiveRecord::Health::TestCase
     end
 
     mock_model = MockModel.new("primary")
+    executed = false
+    result = ActiveRecord::Health.sheddable(model: mock_model) { executed = true }
 
-    assert_raises(ActiveRecord::Health::Unhealthy) do
-      ActiveRecord::Health.sheddable(model: mock_model) { "executed" }
-    end
+    refute executed
+    refute result
   end
 
-  def test_sheddable_pct_executes_block_when_below_threshold
+  def test_sheddable_pct_executes_block_and_returns_true_when_below_threshold
     cache = MockCache.new
     cache.write("activerecord_health:load_pct:primary", 0.4)
 
@@ -46,12 +49,14 @@ class SheddableTest < ActiveRecord::Health::TestCase
     end
 
     mock_model = MockModel.new("primary")
-    result = ActiveRecord::Health.sheddable_pct(pct: 0.5, model: mock_model) { "executed" }
+    executed = false
+    result = ActiveRecord::Health.sheddable_pct(pct: 0.5, model: mock_model) { executed = true }
 
-    assert_equal "executed", result
+    assert executed
+    assert result
   end
 
-  def test_sheddable_pct_raises_unhealthy_when_above_threshold
+  def test_sheddable_pct_returns_false_and_skips_block_when_above_threshold
     cache = MockCache.new
     cache.write("activerecord_health:load_pct:primary", 0.6)
 
@@ -61,13 +66,14 @@ class SheddableTest < ActiveRecord::Health::TestCase
     end
 
     mock_model = MockModel.new("primary")
+    executed = false
+    result = ActiveRecord::Health.sheddable_pct(pct: 0.5, model: mock_model) { executed = true }
 
-    assert_raises(ActiveRecord::Health::Unhealthy) do
-      ActiveRecord::Health.sheddable_pct(pct: 0.5, model: mock_model) { "executed" }
-    end
+    refute executed
+    refute result
   end
 
-  def test_sheddable_pct_executes_block_when_at_threshold
+  def test_sheddable_pct_executes_block_and_returns_true_when_at_threshold
     cache = MockCache.new
     cache.write("activerecord_health:load_pct:primary", 0.5)
 
@@ -77,27 +83,10 @@ class SheddableTest < ActiveRecord::Health::TestCase
     end
 
     mock_model = MockModel.new("primary")
-    result = ActiveRecord::Health.sheddable_pct(pct: 0.5, model: mock_model) { "executed" }
+    executed = false
+    result = ActiveRecord::Health.sheddable_pct(pct: 0.5, model: mock_model) { executed = true }
 
-    assert_equal "executed", result
-  end
-
-  def test_unhealthy_exception_includes_message
-    cache = MockCache.new
-    cache.write("activerecord_health:load_pct:primary", 0.9)
-
-    ActiveRecord::Health.configure do |config|
-      config.vcpu_count = 16
-      config.threshold = 0.75
-      config.cache = cache
-    end
-
-    mock_model = MockModel.new("primary")
-
-    error = assert_raises(ActiveRecord::Health::Unhealthy) do
-      ActiveRecord::Health.sheddable(model: mock_model) { "executed" }
-    end
-
-    assert_match(/90/, error.message)
+    assert executed
+    assert result
   end
 end
