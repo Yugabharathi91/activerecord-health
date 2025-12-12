@@ -10,7 +10,7 @@ class MySQLIntegrationTest < ActiveRecord::Health::TestCase
 
     ActiveRecord::Base.establish_connection(
       adapter: "mysql2",
-      host: ENV.fetch("MYSQL_HOST", "127.0.0.1"),
+      host: mysql_host,
       port: ENV.fetch("MYSQL_PORT", 3306).to_i,
       username: ENV.fetch("MYSQL_USER", "root"),
       password: ENV.fetch("MYSQL_PASSWORD", "root"),
@@ -89,11 +89,16 @@ class MySQLIntegrationTest < ActiveRecord::Health::TestCase
 
   def mysql_config
     {
-      host: ENV.fetch("MYSQL_HOST", "127.0.0.1"),
+      host: mysql_host,
       port: ENV.fetch("MYSQL_PORT", 3306).to_i,
       username: ENV.fetch("MYSQL_USER", "root"),
       password: ENV.fetch("MYSQL_PASSWORD", "root"),
       database: ENV.fetch("MYSQL_DB", "activerecord_health_test")
     }
+  end
+
+  def mysql_host
+    host = ENV.fetch("MYSQL_HOST", "127.0.0.1")
+    host == "localhost" ? "127.0.0.1" : host
   end
 end
