@@ -205,10 +205,10 @@ ActiveRecord::Base.database_healthy?
 
 ## Known Issues
 
-This gem is intentionally simple and conservative. Keep these limitations in mind:
+This gem is simple by design. Keep these limits in mind:
 
-- **Transient failures look like overload.** If the health check query times out or errors (network blip, DNS issue, brief pool exhaustion, etc.), the gem treats the database as unhealthy and caches that result for `cache_ttl`. This can cause short periods of load shedding even if the database itself is fine.
-- **Active session count can overestimate real load.** The heuristic assumes that many “active” sessions imply CPU saturation. In practice, sessions may be active but mostly waiting on locks, I/O, or slow clients. In those cases the database may still have headroom, but the gem can report unhealthy.
+- **Errors look like overload.** The health check query can fail for many reasons: network problems, DNS issues, or connection pool limits. When this happens, the gem marks the database as unhealthy. It caches this result for `cache_ttl` seconds. This can cause load shedding even when the database is fine.
+- **Session counts can be wrong.** The gem assumes many active sessions means the CPU is busy. But sessions can be active while waiting on locks, disk reads, or slow clients. The database may have room to spare, but the gem still reports it as unhealthy.
 
 ## License
 
