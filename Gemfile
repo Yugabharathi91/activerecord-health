@@ -22,3 +22,4 @@ gem "sqlite3"
 # ActiveRecord
 gem "activerecord", "~> 7.0"
 gem "activesupport", "~> 7.0"
+gem "railties", "~> 7.0"

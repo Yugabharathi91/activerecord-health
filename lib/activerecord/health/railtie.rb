@@ -3,7 +3,7 @@
 module ActiveRecord
   module Health
     class Railtie < Rails::Railtie
-      initializer "activerecord_health.validate_configuration" do
+      config.after_initialize do
         ActiveRecord::Health.configuration.validate!
       end
     end
