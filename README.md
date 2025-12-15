@@ -137,7 +137,7 @@ class DatabaseHealthMiddleware
 
   def call(_worker, job, _queue)
     if THROTTLED_QUEUES.include?(job["queue"]) && !ActiveRecord::Health.ok?
-      raise ActiveRecord::Health::Unhealthy
+      raise "Database unhealthy, try again later"
     end
     yield
   end
@@ -149,6 +149,8 @@ Sidekiq.configure_server do |config|
   end
 end
 ```
+
+This uses Sidekiq's [exponential backoff retries](https://github.com/sidekiq/sidekiq/wiki/Error-Handling#automatic-job-retry) to push load into the future.
 
 ## Multi-Database Support
 
